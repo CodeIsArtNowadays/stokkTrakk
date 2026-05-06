@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     DB_NAME: str = Field(default='')
     DB_USER: str = Field(default='')
     
+    COINGECKO_API_KEY: str = Field(default='')
+    
     model_config = SettingsConfigDict(env_file='.env')
     
     @property
