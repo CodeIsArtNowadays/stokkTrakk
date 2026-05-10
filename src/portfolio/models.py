@@ -22,13 +22,13 @@ class Coin(Base):
 class Transaction(Base):
     __tablename__ = 'transactions'
     
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
     type: Mapped[TxType] = mapped_column()
     amount: Mapped[Decimal] = mapped_column(Numeric())
     price: Mapped[Decimal] = mapped_column(Numeric())
     
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    coin_id: Mapped[int] = mapped_column(ForeignKey('coins.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), index=True)
+    coin_id: Mapped[int] = mapped_column(ForeignKey('coins.id'), index=True)
     
     coin: Mapped[Coin] = relationship(Coin, lazy='joined')
     user: Mapped[User] = relationship(User, lazy='joined') 
