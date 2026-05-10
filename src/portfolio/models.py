@@ -16,6 +16,7 @@ class Coin(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column()
     symbol: Mapped[str] = mapped_column(unique=True)
+    description: Mapped[str | None] = mapped_column(default=None)
     
 
 class Transaction(Base):

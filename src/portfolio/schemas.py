@@ -36,6 +36,13 @@ class TransactionCreateSchema(TransactionCreateRequestSchema):
     user_id: int
 
 
+class TransactionCreateWithCoinRequestSchema(TransactionBaseSchema, CoinCreateSchema):
+    pass
+    
+class TransactionCreateWithCoinSchema(TransactionCreateWithCoinRequestSchema):
+    user_id: int
+
+
 class TransactionRetrieveSchema(TransactionBaseSchema):
     id: int
     user: UserInfoSchema

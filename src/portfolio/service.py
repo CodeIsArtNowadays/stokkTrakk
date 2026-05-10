@@ -4,7 +4,12 @@ from aiohttp import ClientSession
 
 from src.portfolio.repository import PortfolioRepository
 from config import settings
-from src.portfolio.schemas import CoinCreateSchema, TransactionCreateSchema
+from src.portfolio.schemas import (
+    CoinCreateSchema,
+    TransactionCreateSchema,
+    TransactionCreateWithCoinSchema,
+)
+
 
 class PortfolioService:
     def __init__(self, repo: PortfolioRepository): # testing
@@ -43,3 +48,20 @@ class PortfolioService:
             
     async def create_coin(self, coin_data: CoinCreateSchema):
         return await self.repo.create_coin(coin_data)
+        
+    async def create_tx_with_coin(self, data: TransactionCreateWithCoinSchema):
+        coin_data = CoinCreateSchema(title=data.title, symbol=data.symbol)
+        try: 
+            async with self.repo.session.begin_nested():
+                coin = await self.repo.create_coin(coin_data)
+        except Exception:
+            coin = await self.repo.get_coin_by_symbol(coin_data.symbol)
+        tx_data = TransactionCreateSchema(
+            type=data.type,
+            amount=data.amount,
+            price=data.price,
+            user_id=data.user_id,
+            coin_id=coin.id
+        )
+        tx = await self.repo.create_tx(tx_data)
+        return tx
