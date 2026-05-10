@@ -39,3 +39,8 @@ async def create_tx(
 @api_router.post('/coins')
 async def create_coin(coin_data: CoinCreateSchema, service: PortfolioService = Depends(get_service)):
     return await service.create_coin(coin_data)
+    
+    
+@api_router.get('/search')
+async def search_coins(q: str, service: PortfolioService = Depends(get_service)):
+    return await service.search_coins(q)

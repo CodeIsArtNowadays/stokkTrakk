@@ -2,6 +2,7 @@ import json
 
 from aiohttp import ClientSession
 
+from src.core.exceptions import ExternalAPIError
 from src.portfolio.repository import PortfolioRepository
 from config import settings
 from src.portfolio.schemas import (
@@ -12,18 +13,45 @@ from src.portfolio.schemas import (
 
 
 class PortfolioService:
-    def __init__(self, repo: PortfolioRepository): # testing
+    def __init__(self, repo: PortfolioRepository): 
         self.repo = repo
-        self.api_token = settings.COINGECKO_API_KEY
+        self.params = {"x-cg-demo-api-key": settings.COINGECKO_API_KEY}
+        self.base_url = 'https://api.coingecko.com/api/v3'
         
+    async def search_coins(self, query):
+        url = self.base_url + f"/search?query={query}"
         
+        async with ClientSession() as session:
+            async with session.get(url, params=self.params) as resp:
+                
+                if resp.status != 200:
+                    raise ExternalAPIError(f'CoinGecko Error: {resp.status}')
+                    
+                data = await resp.json()
+                res = [
+                    {k: v for k, v in coin.items() if k in ['id', 'name', 'symbol']} for coin in data['coins']
+                ]
+                
+                return res
+                
+    async def get_price_by_cg_id(self, cg_id: str):
+        url = self.base_url + f'/simple/price?ids={cg_id}&vs_currencies=usd'
+        
+        async with ClientSession() as session:
+            async with session.get(url, params=self.params) as resp:
+                
+                if resp.status != 200:
+                    raise ExternalAPIError(f'CoinGecko Error: {resp.status}')
+                    
+                data = await resp.json()
+                return data
+    
     async def get_price_by_symbol(self, symbol):
         
-        params = {"x-cg-demo-api-key": self.api_token}
         url = "https://api.coingecko.com/api/v3/coins/bitcoin" # testing
         session = ClientSession()
         
-        async with session.get(url, params=params) as resp:
+        async with session.get(url, params=self.params) as resp:
             data = json.loads(await resp.text())
             res = {
                 'title': data['id'],
