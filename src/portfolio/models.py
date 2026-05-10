@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey, Numeric, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.db import Base
-from src.core.literals import TxType
+from src.core.types import TxType
 from src.auth.models import User
 
 
