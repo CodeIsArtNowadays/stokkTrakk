@@ -1,9 +1,10 @@
 from decimal import Decimal
-import json 
 
 from aiohttp import ClientSession
 
 from src.core.exceptions import ExternalAPIError
+from src.portfolio.models import Coin as CoinModel
+from src.portfolio.models import Transaction as TransactionModel
 from src.portfolio.repository import PortfolioRepository
 from config import settings
 from src.portfolio.schemas import (
@@ -47,27 +48,44 @@ class PortfolioService:
                 data = await resp.json()
                 return Decimal(str((data[cg_id]['usd'])))
     
-    
+    async def get_coin_data_by_cg_id(self, cg_id: str) -> CoinCreateSchema:
         
-    async def get_all_user_tx(self, user_id: int):
-        return await self.repo.get_all_txs_by_user_id(user_id)
-            
+        async with ClientSession() as session:
+            url = self.base_url + f'/coins/{cg_id}'
+            async with session.get(url, params=self.params) as resp:
+                if resp.status != 200:
+                    raise ExternalAPIError(f'CoinGecko Error: {resp.status}')
+                    
+                data = await resp.json()
+                return CoinCreateSchema(title=data['name'], symbol=data['symbol'], cg_id=cg_id)
+      
     async def create_coin(self, coin_data: CoinCreateSchema):
         return await self.repo.create_coin(coin_data)
         
-    # async def create_tx(self, data: TransactionCreateRequestSchema, user_id: int):
+    async def get_or_create_coin(self, cg_id: str) -> CoinModel:
         
-    #     try: 
-    #         async with self.repo.session.begin_nested():
-    #             coin = await self.repo.create_coin(coin_data)
-    #     except Exception:
-    #         coin = await self.repo.get_coin_by_symbol(coin_data.symbol)
-    #     tx_data = TransactionCreateSchema(
-    #         type=data.type,
-    #         amount=data.amount,
-    #         price=data.price,
-    #         user_id=data.user_id,
-    #         coin_id=coin.id
-    #     )
-    #     tx = await self.repo.create_tx(tx_data)
-    #     return tx
+        coin = await self.repo.get_coin_by_cg_id(cg_id)
+        if not coin:
+            coin_data = await self.get_coin_data_by_cg_id(cg_id)
+            coin = await self.create_coin(coin_data)
+        return coin
+        
+            
+    async def create_tx(self, data: TransactionCreateRequestSchema, user_id: int) -> TransactionModel:
+        
+        coin = await self.get_or_create_coin(data.coin_id)
+        coin_price = await self.get_price_by_cg_id(coin.cg_id)
+        
+        tx_data = TransactionCreateSchema(
+            type=data.type,
+            amount=data.amount,
+            coin_id=data.coin_id,
+            user_id=user_id,
+            price=coin_price
+        )
+        tx = await self.repo.create_tx(tx_data)
+        return tx
+        
+        
+    async def get_all_user_tx(self, user_id: int):
+        return await self.repo.get_all_txs_by_user_id(user_id)

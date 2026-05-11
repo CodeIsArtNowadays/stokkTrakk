@@ -24,6 +24,11 @@ class PortfolioRepository:
         stmt = select(Coin).where(Coin.symbol == symbol)
         res = await self.session.execute(stmt)
         return res.scalar_one()
+        
+    async def get_coin_by_cg_id(self, cg_id: str):
+        stmt = select(Coin).where(Coin.cg_id == cg_id)
+        res = await self.session.execute(stmt)
+        return res.scalar_one_or_none()
     
     async def create_tx(self, tx_data: TransactionCreateSchema):
         tx = Transaction(**tx_data.model_dump())
