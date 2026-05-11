@@ -13,11 +13,10 @@ from src.auth.models import User
 class Coin(Base):
     __tablename__ = 'coins'
     
-    id: Mapped[int] = mapped_column(primary_key=True)
+    cg_id: Mapped[str] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column()
     symbol: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str | None] = mapped_column(default=None)
-    cg_id: Mapped[str] = mapped_column()
     
 
 class Transaction(Base):
@@ -29,7 +28,7 @@ class Transaction(Base):
     price: Mapped[Decimal] = mapped_column(Numeric())
     
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), index=True)
-    coin_id: Mapped[int] = mapped_column(ForeignKey('coins.id'), index=True)
+    coin_id: Mapped[str] = mapped_column(ForeignKey('coins.cg_id'), index=True)
     
     coin: Mapped[Coin] = relationship(Coin, lazy='joined')
     user: Mapped[User] = relationship(User, lazy='joined') 

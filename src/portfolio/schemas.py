@@ -1,6 +1,4 @@
-from decimal import Decimal
-
-from pydantic import BaseModel, ConfigDict, computed_field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, computed_field, field_validator
 
 from src.auth.schemas import UserInfoSchema
 from src.core.types import TxType, CryptoSymbol, PositiveDecimal
@@ -16,27 +14,27 @@ class BaseSchema(BaseModel):
 class CoinCreateSchema(BaseModel):
     title: str
     symbol: CryptoSymbol
+    cg_id: str
     
 
 class CoinMiniRetrieveSchema(BaseSchema):
-    id: int
     symbol: CryptoSymbol
+    cg_id: str
     
 
 class CoinInfoSchema(BaseSchema):
-    id: int
     title: str
     symbol: CryptoSymbol
+    cg_id: str
     
     
 class TransactionBaseSchema(BaseSchema):
     type: TxType
     amount: PositiveDecimal
-    price: PositiveDecimal
 
 
 class TransactionCreateRequestSchema(TransactionBaseSchema):
-    coin_id: int
+    coin_id: str
     
     @field_validator('amount')
     @classmethod
@@ -44,6 +42,11 @@ class TransactionCreateRequestSchema(TransactionBaseSchema):
         if v > 1_000_000:
             raise ValueError('Amount more than a 1M')
         return v
+
+
+class TransactionCreateSchema(TransactionCreateRequestSchema):
+    user_id: int
+    price: PositiveDecimal
     
     @field_validator('price')
     @classmethod
@@ -53,21 +56,11 @@ class TransactionCreateRequestSchema(TransactionBaseSchema):
         return v
 
 
-class TransactionCreateSchema(TransactionCreateRequestSchema):
-    user_id: int
-
-
-class TransactionCreateWithCoinRequestSchema(TransactionBaseSchema, CoinCreateSchema):
-    pass
-    
-class TransactionCreateWithCoinSchema(TransactionCreateWithCoinRequestSchema):
-    user_id: int
-
-
 class TransactionRetrieveSchema(TransactionBaseSchema):
     id: int
     user: UserInfoSchema
     coin: CoinMiniRetrieveSchema
+    price: PositiveDecimal
     
     @computed_field
     @property
