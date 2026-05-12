@@ -1,7 +1,9 @@
+from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.portfolio.models import Coin, Transaction
+from src.auth.models import User
 from src.portfolio.schemas import (
     CoinCreateSchema,
     TransactionCreateSchema
@@ -39,6 +41,18 @@ class PortfolioRepository:
         
     async def get_all_txs_by_user_id(self, user_id: int):
         stmt = select(Transaction).where(Transaction.user_id==user_id)
+        res = await self.session.execute(stmt)
+        return res.scalars().all()
+        
+    async def get_all_user_coins(self, user_id: int) -> Sequence[str]:
+        stmt = select(Coin.title).join(
+            Transaction, Transaction.coin_id==Coin.cg_id
+        ).join(
+            User, Transaction.user_id==User.id
+        ).where(
+            Transaction.user_id==user_id
+        ).group_by(Coin.title)
+        
         res = await self.session.execute(stmt)
         return res.scalars().all()
         

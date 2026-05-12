@@ -66,3 +66,4 @@ class TransactionRetrieveSchema(TransactionBaseSchema):
     @property
     def total_worth(self) -> PositiveDecimal:
         return self.amount * self.price
+

@@ -38,3 +38,11 @@ async def create_coin(coin_data: CoinCreateSchema, service: PortfolioService = D
 @api_router.get('/search')
 async def search_coins(q: str, service: PortfolioService = Depends(get_service)):
     return await service.search_coins(q)
+    
+    
+@api_router.get('/protfolio')
+async def portfolio(
+    user: User = Depends(get_user),
+    service: PortfolioService = Depends(get_service)
+):
+    return await service.repo.get_all_user_coins(user.id)
